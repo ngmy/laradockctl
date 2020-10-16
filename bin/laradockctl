@@ -1,0 +1,66 @@
+#!/bin/bash
+#
+# The laradockctl executable file.
+
+set -Ceuo pipefail
+
+readonly CURRENT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+source "${CURRENT_PATH}/../src/helpers.sh"
+source "${CURRENT_PATH}/../src/logic.sh"
+
+main() {
+  local option
+  local optarg
+  local is_ansi='true'
+  local action=''
+
+  while getopts ':d:hV-:' option; do
+    optarg="${OPTARG:-}"
+    [[ "${option}" = '-' ]] &&
+      option="-${OPTARG%%=*}" &&
+      optarg="${OPTARG/${OPTARG%%=*}/}" &&
+      optarg="${optarg#=}"
+    case "-${option}" in
+      --no-ansi)
+        is_ansi='false'
+        ;;
+      -d|--docker-compose-command)
+        action="_execute_docker_compose_command_in_laradock_dir ${optarg}"
+        ;;
+      -h|--help)
+        action='help'
+        ;;
+      -V|--version)
+        action='version'
+        ;;
+      --)
+        break
+        ;;
+      -\?)
+        action="exit_with_undefined_option_error $optarg"
+        ;;
+      --*)
+        action="exit_with_undefined_option_error $option"
+        ;;
+    esac
+  done
+
+  shift "$(("${OPTIND}" - 1))"
+
+  if [[ "${action}" == '' ]]; then
+    if [[ "${1:-}" == '' ]]; then
+      action='list'
+    else
+      action='execute_command "$@"'
+    fi
+  fi
+
+  if [[ "${is_ansi}" == 'true' ]]; then
+    eval "${action}"
+  else
+    eval "${action}" | sed -r 's/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g'
+  fi
+}
+
+main "$@"
