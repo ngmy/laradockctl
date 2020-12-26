@@ -63,13 +63,13 @@ The `DESCRIPTIPON` constant allow you to define a description of the command.
 The `NAME` and `DESCRIPTIPON` constants are used to display your custom command in the result of the `list` command.
 The `handle` function will be called when your custom command is executed. You may write the logic of the command in this function.
 
-The following is an example of a custom command to launch the Laravel application development environment:
+The following is an example of a custom command to start up the Laravel application development environment:
 ```bash
 #!/bin/bash
 set -Ceuo pipefail
 
 local NAME='my:up'
-local DESCRIPTION='Launch my development environment'
+local DESCRIPTION='Start up my development environment'
 
 handle() {
   cp -f ../.laradock/env-development .env
