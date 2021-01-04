@@ -8,5 +8,5 @@ local NAME='workspace:composer'
 local DESCRIPTION='Execute a Composer command'
 
 handle() {
-  docker-compose exec workspace composer "$@"
+  docker-compose exec -u laradock workspace composer "$@"
 }
