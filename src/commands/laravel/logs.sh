@@ -8,5 +8,5 @@ local NAME='laravel:logs'
 local DESCRIPTION='View Laravel logs'
 
 handle() {
-  docker-compose exec workspace tail "$@" storage/logs/laravel.log
+  docker-compose exec -u laradock workspace tail "$@" storage/logs/laravel.log
 }

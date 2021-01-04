@@ -75,11 +75,11 @@ handle() {
   cp -f ../.laradock/env-development .env
   docker-compose up -d nginx mysql mailhog workspace
   cp ../.env.development ../.env
-  docker-compose exec workspace composer install
-  docker-compose exec workspace php artisan key:generate
-  docker-compose exec workspace php artisan migrate
-  docker-compose exec workspace npm install
-  docker-compose exec workspace npm run dev
+  docker-compose exec -u laradock workspace composer install
+  docker-compose exec -u laradock workspace php artisan key:generate
+  docker-compose exec -u laradock workspace php artisan migrate
+  docker-compose exec -u laradock workspace npm install
+  docker-compose exec -u laradock workspace npm run dev
 }
 ```
 **Note:** The current path when executing the custom command is your `laradock` directory.

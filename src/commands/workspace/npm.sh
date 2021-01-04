@@ -8,5 +8,5 @@ local NAME='workspace:npm'
 local DESCRIPTION='Execute an NPM command'
 
 handle() {
-  docker-compose exec workspace npm "$@"
+  docker-compose exec -u laradock workspace npm "$@"
 }

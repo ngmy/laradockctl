@@ -8,5 +8,5 @@ local NAME='laravel:artisan'
 local DESCRIPTION='Execute an Artisan command'
 
 handle() {
-  docker-compose exec workspace php artisan "$@"
+  docker-compose exec -u laradock workspace php artisan "$@"
 }
