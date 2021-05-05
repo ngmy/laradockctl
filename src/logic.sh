@@ -294,6 +294,8 @@ _provide_command_name_to_file() {
   local command_file
   while read -r command_file; do
     source "${command_file}"
-    interest["${NAME}"]="${command_file}"
+    if [ -z "${interest["${NAME}"]:-}" ]; then
+      interest["${NAME}"]="${command_file}"
+    fi
   done < <(_find_command_files)
 }
