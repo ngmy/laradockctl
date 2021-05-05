@@ -41,6 +41,25 @@ laradockctl_command_dir() {
 }
 
 #######################################
+# Get the command path.
+# Globals:
+#   None
+# Arguments:
+#   $1 A relative path from the library command directory
+# Outputs:
+#   Writes location to stdout
+# Returns
+#   None
+#######################################
+laradockctl_command_path() {
+  local path=''
+  if [ $# -eq 1 ]; then
+    path="/$1"
+  fi
+  echo "$(script_dir)/../src/commands${path}"
+}
+
+#######################################
 # Get this script logo.
 # Globals:
 #   None
@@ -294,6 +313,8 @@ _provide_command_name_to_file() {
   local command_file
   while read -r command_file; do
     source "${command_file}"
-    interest["${NAME}"]="${command_file}"
+    if [ -z "${interest["${NAME}"]:-}" ]; then
+      interest["${NAME}"]="${command_file}"
+    fi
   done < <(_find_command_files)
 }
