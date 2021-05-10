@@ -4,10 +4,10 @@
 
 set -Ceuo pipefail
 
-readonly CURRENT_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+readonly current_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source "${CURRENT_PATH}/../src/helpers.sh"
-source "${CURRENT_PATH}/../src/logic.sh"
+source "${current_path}/../src/helpers.sh"
+source "${current_path}/../src/logic.sh"
 
 main() {
   local option
