@@ -20,13 +20,13 @@ laradock_dir() {
 }
 
 #######################################
-# Outputs the fully qualified paths of all laradockctl command directories.
+# Outputs fully qualified paths of all laradockctl command directories.
 # Globals:
 #   LARADOCKCTL_ADDITIONAL_COMMAND_DIRS
 # Arguments:
 #   None
 # Outputs:
-#   STDOUT The fully qualified paths of all laradockctl command directories
+#   STDOUT Fully qualified paths of all laradockctl command directories
 # Returns
 #   None
 #######################################

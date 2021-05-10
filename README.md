@@ -4,7 +4,9 @@ laradockctl is a command wrapper for Laradock.
 ## What Does laradockctl Do?
 laradockctl allows you to complete Laradock operations with short commands without having to move to your `laradock` directory while in your project root directory:
 ```console
-laradockctl workspace:composer install
+laradockctl up
+laradockctl composer update
+laradockctl down
 ```
 It also allows you to add custom commands.
 
@@ -28,24 +30,37 @@ It also allows you to add custom commands.
    ```
 3. Add the `bin` directory of laradockctl to your `PATH` environment variable:
    ```bash
-   export PATH=/PATH_TO_LARADOCKCTL/bin:$PATH
+   export PATH=/PATH_TO_LARADOCKCTL_DIR/bin:$PATH
    ```
    We recommend using [direnv](https://direnv.net/).
 4. Go to the Usage section.
 
 ## Basic Usage
-### Execute laradockctl Commands
+### Available Environment Variables
+The available environment variables are as follows:
+| Environment Variable | Description |
+| --- | --- |
+| `LARADOCKCTL_ADDITIONAL_COMMAND_DIRS` | Fully qualified paths of your custom laradockctl command directories, separated by `:`. For example: `$PWD/.laradock/commands`. |
+| `LARADOCKCTL_CONTAINER_NAMES` | Names of containers to start up, separated by `,`. For example: `nginx,mysql`. If omitted, start up the workspace container only. |
+| `LARADOCKCTL_ENV_FILE` | The fully qualified path of your environment variables file to copy to `.env`. For example: `$PWD/.laradock/env-development`. If ommited, use `.env` in the `laradock` directory.  |
+| `LARADOCKCTL_PHIVE_HOME_DIR_CONTAINER` | The fully qualified path or path relative to `/var/www` of the PHIVE home directory in the workspace container. For example: `.laradock/data/phive`. If ommited, use the PHIVE default. |
+
+### Default Commands
 All laradockctl commands begin with `laradockctl`. The available commands are as follows:
+* `artisan` Execute an Artisan command in the workspace container
+* `composer` Execute a Composer command in the workspace container
+* `destroy` Destory a development environment
+* `down` Shut down a development environment
 * `list` List commands
-* `laravel:artisan` Execute an Artisan command
-* `laravel:logs` View Laravel logs
-* `workspace:composer` Execute a Composer command
-* `workspace:npm`  Execute an NPM command
+* `logs` View application logs
+* `npm` Execute an NPM command in the workspace container
+* `phive` Execute a PHIVE command in the workspace container
+* `up` Start up a development environment
 
 ### Execute Docker Compose Commands
-To execute Docker Compose commands, which is not defined as laradockctl command, you can use the `--docker-compose-command` or `-d` option:
+To execute Docker Compose commands, which is not defined as the laradockctl command, you can use the `--docker-compose-command` or `-d` option:
 ```console
-laradockctl --docker-compose-command='down'
+laradockctl --docker-compose-command='exec workspace bash'
 ```
 
 ### More Usage
@@ -66,31 +81,25 @@ The `handle` function will be called when your custom command is executed. You m
 The following is an example of a custom command to start up the Laravel application development environment:
 ```bash
 #!/bin/bash
+
 set -Ceuo pipefail
 
-local NAME='my:up'
-local DESCRIPTION='Start up my development environment'
+local NAME='namespace:command'
+local DESCRIPTION='The command description'
 
 handle() {
-  cp -f ../.laradock/env-development .env
-  docker-compose up -d nginx mysql mailhog workspace
-  cp ../.env.development ../.env
-  docker-compose exec -u laradock workspace composer install
-  docker-compose exec -u laradock workspace php artisan key:generate
-  docker-compose exec -u laradock workspace php artisan migrate
-  docker-compose exec -u laradock workspace npm install
-  docker-compose exec -u laradock workspace npm run dev
+  #
 }
 ```
 **Note:** The current path when executing the custom command is your `laradock` directory.
 
 You need to add your custom command file or the directory where your custom command is located to the `PATH` environment variable:
 ```bash
-export LARADOCKCTL_COMMAND_PATH=/PATH_TO_YOUR_COMMAND:/PATH_TO_LARADOCKCTL/commands
+export LARADOCKCTL_ADDITIONAL_COMMAND_DIRS=/PATH_TO_YOUR_CUSTOM_COMMAND_DIR
 ```
 Now you can run the custom command:
 ```console
-laradockctl my:up
+laradockctl namespace:command
 ```
 
 ## License
