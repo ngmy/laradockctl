@@ -79,4 +79,16 @@ handle() {
   if file_exists_in_workspace composer.json; then
     docker-compose exec -u laradock workspace composer install
   fi
+
+  # Initialize Laravel
+  if file_exists_in_workspace artisan; then
+    docker-compose exec workspace php artisan key:generate
+    docker-compose exec workspace php artisan migrate
+  fi
+  if file_exists_in_workspace package.json; then
+    docker-compose exec workspace npm install
+  fi
+  if file_exists_in_workspace webpack.mix.js; then
+    docker-compose exec workspace npm run dev
+  fi
 }
