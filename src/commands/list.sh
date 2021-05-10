@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# List commands.
+# The laradockctl command to list commands.
 
 set -Ceuo pipefail
 

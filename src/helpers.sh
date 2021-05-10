@@ -5,13 +5,84 @@
 set -Ceuo pipefail
 
 #######################################
-# Print out the error message.
+# Outputs the fully qualified path of the laradock directory.
+# Globals:
+#   None
+# Arguments:
+#   None
+# Outputs:
+#   STDOUT The fully qualified path of the laradock directory
+# Returns
+#   None
+#######################################
+laradock_dir() {
+  echo "$(script_dir)/../../laradock"
+}
+
+#######################################
+# Outputs the fully qualified paths of all laradockctl command directories.
+# Globals:
+#   LARADOCKCTL_ADDITIONAL_COMMAND_DIRS
+# Arguments:
+#   None
+# Outputs:
+#   STDOUT The fully qualified paths of all laradockctl command directories
+# Returns
+#   None
+#######################################
+laradockctl_command_dirs() {
+  local dirs
+  dirs="$(script_dir)/../src/commands"
+  if [ -n "${LARADOCKCTL_ADDITIONAL_COMMAND_DIRS:-}" ]; then
+    dirs="${LARADOCKCTL_ADDITIONAL_COMMAND_DIRS}:${dirs}"
+  fi
+  echo "${dirs}"
+}
+
+#######################################
+# Outputs the fully qualified path to the built-in laradockctl command directory.
+# Globals:
+#   None
+# Arguments:
+#   $1 The path relative to the build-in laradockctl command directory
+# Outputs:
+#   STDOUT The fully qualified path to the built-in laradockctl command directory
+# Returns
+#   None
+#######################################
+laradockctl_command_path() {
+  local path=''
+  if [ $# -eq 1 ]; then
+    path="/$1"
+  fi
+  echo "$(script_dir)/../src/commands${path}"
+}
+
+#######################################
+# Checks whether a file exists in the workspace container.
+# Globals:
+#   None
+# Arguments:
+#   $1 The fully qualified path or path relative to /var/www
+# Outputs:
+#   None
+# Returns
+#   0 If the file exists
+#   1 If the file not exists
+#######################################
+file_exists_in_workspace() {
+  local -r path="$1"
+  docker-compose exec workspace bash -c "test -f ${path}"
+}
+
+#######################################
+# Outputs the error message.
 # Globals:
 #   None
 # Arguments:
 #   $1 Error message to print out
 # Outputs:
-#   Writes location to stderr
+#   STDERR The erroe message
 # Returns
 #   0
 #######################################
@@ -21,29 +92,29 @@ err() {
 }
 
 #######################################
-# Get the script name.
+# Outputs the base name of the laradockctl executable.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes name to stdout
+#   STDOUT The base name of the laradockctl executable
 # Returns
 #   0
 #######################################
-script_name() {
+script_basename() {
   echo "$(basename "$0")"
   return 0
 }
 
 #######################################
-# Get this script directory.
+# Outputs the fully qualified path of the directory of the laradockctl executable.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes location to stdout
+#   STDOUT The fully qualified path of the directory of the laradockctl executable
 # Returns
 #   0
 #######################################
@@ -53,16 +124,17 @@ script_dir() {
 }
 
 #######################################
-# Print out the error message.
+# Checks if the given key or index exists in the array.
 # Globals:
 #   None
 # Arguments:
-#   Error message to print out
+#   $1 The reference to the array
+#   $2 The key or index
 # Outputs:
-#   Writes location to stdout
+#   None
 # Returns
-#   0 if key exists.
-#   1 if key not exists.
+#   0 If the key exists
+#   1 If the key not exists
 #######################################
 array_key_exists() {
   declare -rn array_ref="$1"
@@ -76,47 +148,47 @@ array_key_exists() {
 }
 
 #######################################
-# Color text.
+# Colors text.
 # Globals:
 #   None
 # Arguments:
-#   $1 Text.
-#   $2 A color name.
+#   $1 Text
+#   $2 The color name
 # Outputs:
-#   Writes colored text to stdout.
+#   STDOUT Colored text
 # Returns
 #   0
 #######################################
 color_text() {
-  local -r TEXT="$1"
-  local -r COLOR_NAME="$2"
-  declare -A colors
-  _provide_color_name_to_value colors
-  tput setaf "${colors["${COLOR_NAME}"]}"
-  echo -en "${TEXT}"
+  local -r text="$1"
+  local -r color_name="$2"
+  declare -A COLORS
+  _provide_color_name_to_value COLORS
+  tput setaf "${COLORS["${color_name}"]}"
+  echo -en "${text}"
   tput sgr0
   return 0
 }
 
 #######################################
-# Color a text background.
+# Colors the text background.
 # Globals:
 #   None
 # Arguments:
-#   $1 Text.
-#   $2 A color name.
+#   $1 Text
+#   $2 The color name
 # Outputs:
-#   Writes text in colored background to stdout.
+#   STDOUT Text with the colored background
 # Returns
 #   0
 #######################################
 color_background() {
-  local -r TEXT="$1"
-  local -r COLOR_NAME="$2"
-  declare -A colors
-  _provide_color_name_to_value colors
-  tput setab "${colors["${COLOR_NAME}"]}"
-  echo -en "${TEXT}"
+  local -r text="$1"
+  local -r color_name="$2"
+  declare -A COLORS
+  _provide_color_name_to_value COLORS
+  tput setab "${COLORS["${color_name}"]}"
+  echo -en "${text}"
   tput sgr0
   return 0
 }
@@ -126,15 +198,15 @@ color_background() {
 # Globals:
 #   None
 # Arguments:
-#   $1 An associative array to provide.
+#   $1 The associative array to provide
 # Outputs:
 #   None
 # Returns
 #   0
 #######################################
 _provide_color_name_to_value() {
-  declare -rn INTEREST="$1"
-  INTEREST=(
+  declare -rn interest="$1"
+  interest=(
     ['black']='0'
     ['red']='1'
     ['green']='2'

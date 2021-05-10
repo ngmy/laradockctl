@@ -1,8 +1,11 @@
 #!/bin/bash
+#
+# The laradockctl command to start up a development environment.
+
 set -Ceuo pipefail
 
-local NAME='my:up'
-local DESCRIPTION='Start up my development environment'
+local NAME='up'
+local DESCRIPTION='Start up a development environment'
 
 handle() {
   # Enable assertion in the php-fpm container
@@ -23,9 +26,8 @@ handle() {
   fi
 
   # Start up containers
-  local CONTAINERS
-  CONTAINERS="$(echo -n "${LARADOCKCTL_CONTAINERS:-workspace}" | xargs -d ',')"
-  docker-compose up -d --build ${CONTAINERS}
+  local -r container_names="$(echo -n "${LARADOCKCTL_CONTAINER_NAMES:-workspace}" | xargs -d ',')"
+  docker-compose up -d --build ${container_names}
 
   # Enable assertion in the workspace container
   docker-compose exec workspace bash -c 'sed -i \
@@ -34,27 +36,27 @@ handle() {
     /etc/php/7.4/cli/php.ini'
 
   # Generate tool configuration files from templates
-  if [ -f ../.php_cs.dist ]; then
+  if file_exists_in_workspace .php_cs.dist; then
     docker-compose exec -u laradock workspace cp .php_cs.dist .php_cs
   fi
-  if [ -f ../phpcs.xml.dist ]; then
+  if file_exists_in_workspace phpcs.xml.dist; then
     docker-compose exec -u laradock workspace cp phpcs.xml.dist phpcs.xml
   fi
-  if [ -f ../phpdoc.dist.xml ]; then
+  if file_exists_in_workspace phpdoc.dist.xml; then
     docker-compose exec -u laradock workspace cp phpdoc.dist.xml phpdoc.xml
   fi
-  if [ -f ../phpstan.neon.dist ]; then
+  if file_exists_in_workspace phpstan.neon.dist; then
     docker-compose exec -u laradock workspace cp phpstan.neon.dist phpstan.neon
   fi
-  if [ -f ../phpunit.xml.dist ]; then
+  if file_exists_in_workspace phpunit.xml.dist; then
     docker-compose exec -u laradock workspace cp phpunit.xml.dist phpunit.xml
   fi
-  if [ -f ../psalm.xml.dist ]; then
+  if file_exists_in_workspace psalm.xml.dist; then
     docker-compose exec -u laradock workspace cp psalm.xml.dist psalm.xml
   fi
 
   # Install PHIVE
-  if ! docker-compose exec workspace bash -c 'test -f /usr/local/bin/phive'; then
+  if ! file_exists_in_workspace /usr/local/bin/phive; then
     docker-compose exec workspace curl -fsSL https://phar.io/releases/phive.phar -o /tmp/phive.phar
     docker-compose exec workspace curl -fsSL https://phar.io/releases/phive.phar.asc -o /tmp/phive.phar.asc
     docker-compose exec workspace gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys 0x9D8A98B29B2D5D79
@@ -63,9 +65,9 @@ handle() {
     docker-compose exec workspace mv /tmp/phive.phar /usr/local/bin/phive
   fi
   # Install tools
-  if [ -f ../.phive/phars.xml ]; then
+  if file_exists_in_workspace .phive/phars.xml; then
     set +o pipefail
-    yes | laradockctl my:phive install --force-accept-unsigned
+    yes | laradockctl phive install --force-accept-unsigned
     set -o pipefail
   fi
   # Extract tools
@@ -74,7 +76,7 @@ handle() {
   fi
 
   # Install dependencies
-  if [ -f ../composer.json ]; then
+  if file_exists_in_workspace composer.json; then
     docker-compose exec -u laradock workspace composer install
   fi
 }

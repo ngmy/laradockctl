@@ -2,71 +2,24 @@
 #
 # laradockctl business logic.
 
+set -Ceuo pipefail
+
 show_error() {
-  local -r MESSAGE="$1"
-  local -r MESSAGE_LENGTH="${#1}"
-  echo -en "$(color_background "  $(printf "%-${MESSAGE_LENGTH}s  ")" 'red')\n"
-  echo -en "$(color_background "  $1  " 'red')\n"
-  echo -en "$(color_background "  $(printf "%-${MESSAGE_LENGTH}s  ")" 'red')\n"
+  local -r message="$1"
+  local -r message_length="${#1}"
+  echo -en "$(color_background "  $(printf "%-${message_length}s  ")" 'red')\n"
+  echo -en "$(color_background "  ${message}  " 'red')\n"
+  echo -en "$(color_background "  $(printf "%-${message_length}s  ")" 'red')\n"
 }
 
 #######################################
-# Get the Laradock directory.
+# Outputs the laradockctl logo.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes location to stdout
-# Returns
-#   None
-#######################################
-laradock_dir() {
-  echo "$(script_dir)/../../laradock"
-}
-
-#######################################
-# Get the laradockctl command directory.
-# Globals:
-#   LARADOCKCTL_COMMAND_DIR
-# Arguments:
-#   None
-# Outputs:
-#   Writes location to stdout
-# Returns
-#   None
-#######################################
-laradockctl_command_dir() {
-  echo "${LARADOCKCTL_COMMAND_PATH:-"$(script_dir)/../src/commands"}"
-}
-
-#######################################
-# Get the command path.
-# Globals:
-#   None
-# Arguments:
-#   $1 A relative path from the library command directory
-# Outputs:
-#   Writes location to stdout
-# Returns
-#   None
-#######################################
-laradockctl_command_path() {
-  local path=''
-  if [ $# -eq 1 ]; then
-    path="/$1"
-  fi
-  echo "$(script_dir)/../src/commands${path}"
-}
-
-#######################################
-# Get this script logo.
-# Globals:
-#   None
-# Arguments:
-#   None
-# Outputs:
-#   Writes the logo to stdout
+#   STDOUT The laradockctl logo
 # Returns
 #   None
 #######################################
@@ -82,78 +35,78 @@ LOGO
 }
 
 #######################################
-# Get this script version.
+# Outputs the laradockctl version.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes the version to stdout
+#   STDOUT The laradockctl version
 # Returns
 #   None
 #######################################
 version() {
-  local -r APP_NAME="$(color_text "$(script_name)" 'green')"
-  local -r VERSION="$(color_text "$(git describe --tags --exact-match 2>/dev/null \
+  local -r app_name="$(color_text "$(script_basename)" 'green')"
+  local -r version="$(color_text "$(git describe --tags --exact-match 2>/dev/null \
     || git rev-parse --short HEAD)" 'yellow')"
-  local -r RELEASE_DATE="$(date -u -d "@$(git log -n1 --pretty=%ct HEAD)" '+%Y-%m-%d %H:%M:%S')"
-  echo -en "${APP_NAME} version ${VERSION} ${RELEASE_DATE}\n"
+  local -r release_date="$(date -u -d "@$(git log -n1 --pretty=%ct HEAD)" '+%Y-%m-%d %H:%M:%S')"
+  echo -en "${app_name} version ${version} ${release_date}\n"
 }
 
 #######################################
-# Get this script usage.
+# Outputs laradockctl usage.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes usage to stdout
+#   STDOUT laradockctl usage
 # Returns
 #   None
 #######################################
 usage() {
   color_text 'Usage:\n' 'yellow'
-  echo -en "  $(script_name) [options] command\n" 1>&2
+  echo -en "  $(script_basename) [options] command\n" 1>&2
 }
 
 #######################################
-# Get this script options.
+# Outputs laradockctl options.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes options to stdout
+#   STDOUT laradockctl options
 # Returns
 #   None
 #######################################
 _options() {
-  declare -rA OPTIONS=(
+  declare -rA options=(
     ['--no-ansi']='Disable ANSI output'
     ['-V, --version']='Display this application version'
     ['-d, --docker-compose-command=DOCKER_COMPOSE_COMMAND']='Execute a Docker Compose command'
     ['-h, --help']='Display this help message'
   )
-  local -r LONGEST_OPTION_NAME_LENGTH="$(get_longest_array_key_length OPTIONS)"
+  local -r longest_option_name_length="$(get_longest_array_key_length options)"
   color_text 'Options:\n' 'yellow'
-  for option in "${!OPTIONS[@]}"; do
-    local padded_option_name="$(printf "%-${LONGEST_OPTION_NAME_LENGTH}s" "${option}")"
-    printf "  %s  %s\n" "$(color_text "${padded_option_name}" 'green')" "${OPTIONS["${option}"]}"
+  for option in "${!options[@]}"; do
+    local padded_option_name="$(printf "%-${longest_option_name_length}s" "${option}")"
+    printf "  %s  %s\n" "$(color_text "${padded_option_name}" 'green')" "${options["${option}"]}"
   done | sort
 }
 
 _get_command_namespace() {
-  local -r FQ_COMMAND_NAME="$1"
-  local -r COMMAND_NAME="${FQ_COMMAND_NAME#*:}"
-  local -r COMMAND_NAMESPACE_WITH_COLON="${FQ_COMMAND_NAME%"${COMMAND_NAME}"}"
-  local -r COMMAND_NAMESPACE="${COMMAND_NAMESPACE_WITH_COLON%:}"
-  echo "${COMMAND_NAMESPACE:-_}"
+  local -r fq_command_name="$1"
+  local -r command_name="${fq_command_name#*:}"
+  local -r command_namespace_with_colon="${fq_command_name%"${command_name}"}"
+  local -r command_namespace="${command_namespace_with_colon%:}"
+  echo "${command_namespace:-_}"
 }
 
 _get_command_name() {
-  local -r FQ_COMMAND_NAME="$1"
-  local -r COMMAND_NAME="${FQ_COMMAND_NAME#*:}"
-  echo "${COMMAND_NAME}"
+  local -r fq_command_name="$1"
+  local -r command_name="${fq_command_name#*:}"
+  echo "${command_name}"
 }
 
 _get_command_namespaces() {
@@ -182,13 +135,13 @@ _provide_command_namespace_to_names() {
 }
 
 #######################################
-# Get this script commands.
+# Outputs laradockctl commands.
 # Globals:
 #   None
 # Arguments:
 #   None
 # Outputs:
-#   Writes commands to stdout
+#   STDOUT laradockctl commands
 # Returns
 #   None
 #######################################
@@ -198,7 +151,7 @@ _commands() {
   declare -A command_namespace_to_names
   _provide_command_namespace_to_names command_namespace_to_names
   color_text 'Commands:\n' 'yellow'
-  local -r LONGEST_COMMAND_NAME_LENGTH="$(get_longest_array_key_length command_name_to_file)"
+  local -r longest_command_name_length="$(get_longest_array_key_length command_name_to_file)"
   local command_namespace
   while read -r command_namespace; do
     if [[ "${command_namespace}" != '_' ]]; then
@@ -212,7 +165,7 @@ _commands() {
       else
         source "${command_name_to_file["${command_namespace}:${command_name}"]}"
       fi
-      local padded_command_name="$(printf "%-${LONGEST_COMMAND_NAME_LENGTH}s" "${NAME}")"
+      local padded_command_name="$(printf "%-${longest_command_name_length}s" "${NAME}")"
       printf "  %s  %s\n" "$(color_text "${padded_command_name}" 'green')" "${DESCRIPTION}"
     done | sort
   done < <(_get_command_namespaces)
@@ -278,7 +231,7 @@ exit_with_undefined_option_error() {
   exit 1
 }
 
-# TODO: Interface design.
+# TODO: Interface design
 #       Create a "help" command and the "--help" option displays the result of "help list"?
 help() {
   _logo
@@ -305,7 +258,7 @@ list() {
 }
 
 _find_command_files() {
-  echo -n "$(laradockctl_command_dir)" | xargs -d ':' -I {} find {} -name '*.sh'
+  echo -n "$(laradockctl_command_dirs)" | xargs -d ':' -I {} find {} -name '*.sh'
 }
 
 _provide_command_name_to_file() {
