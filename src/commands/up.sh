@@ -59,7 +59,7 @@ handle() {
   if ! file_exists_in_workspace /usr/local/bin/phive; then
     docker-compose exec workspace curl -fsSL https://phar.io/releases/phive.phar -o /tmp/phive.phar
     docker-compose exec workspace curl -fsSL https://phar.io/releases/phive.phar.asc -o /tmp/phive.phar.asc
-    docker-compose exec workspace gpg --keyserver ipv4.pool.sks-keyservers.net --recv-keys 0x9D8A98B29B2D5D79
+    docker-compose exec workspace gpg --keyserver hkps://keys.openpgp.org --recv-keys 0x9D8A98B29B2D5D79
     docker-compose exec workspace gpg --verify /tmp/phive.phar.asc /tmp/phive.phar
     docker-compose exec workspace chmod +x /tmp/phive.phar
     docker-compose exec workspace mv /tmp/phive.phar /usr/local/bin/phive
